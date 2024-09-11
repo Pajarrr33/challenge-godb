@@ -365,7 +365,60 @@ func service() {
 }
 
 func create_service() {
+	service := entity.Service{}
 
+	db := connectDb()        
+	defer db.Close()   
+	var err error 
+
+	fmt.Println("========== Create Service ======")
+
+	fmt.Print("Insert Service Id     : ")
+	scanner.Scan()
+	service.Service_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("Insert Service Name   : ")
+	scanner.Scan()
+	service.Service_name = scanner.Text()
+
+	fmt.Print("Insert Service Unit  : ")
+	scanner.Scan()
+	service.Unit = scanner.Text()
+
+	fmt.Print("Insert Service Price : ")
+	scanner.Scan()
+	service.Price, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	// fill the created_at and updated_at value with time now
+	service.Created_at = time.Now()
+	service.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	// check if id service is already exist 
+	check_id := "SELECT service_id FROM service WHERE service_id = $1;"
+
+	err = db.QueryRow(check_id,service.Service_id).Scan(&service.Service_id)
+	if err == nil {
+		fmt.Println(" Service ID already exists. Please enter a different ID")
+		return
+	}
+
+	// insert customer data into db
+	insert_query := "INSERT INTO service (service_id,service_name,unit,price,created_at,updated_at) VALUES ($1, $2, $3, $4, $5, $6);"
+
+	_, err = db.Exec(insert_query, service.Service_id, service.Service_name, service.Unit, service.Price, service.Created_at, service.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} else {
+		fmt.Println("Successfully added")  // Log success
+	}
 }
 
 func view_of_list_service() {
