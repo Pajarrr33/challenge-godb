@@ -210,7 +210,66 @@ func view_details_customer_by_id() {
 }
 
 func update_customer() {
+	db := connectDb()        
+	defer db.Close()   
 
+	customer := entity.Customer{}
+
+	fmt.Print("Insert a customer id :")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	select_by_id := "SELECT customer_id,name,phone,address,created_at,updated_at FROM customer WHERE customer_id = $1"
+	err = db.QueryRow(select_by_id,id).Scan(&customer.Customer_id, &customer.Name, &customer.Phone , &customer.Address, &customer.Created_at, &customer.Updated_at)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Customer Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	fmt.Println("======== Update Customer ==========")
+
+	fmt.Print("Enter Customer Name   : ")
+	scanner.Scan()
+	name := scanner.Text()
+	if name != "" {
+		customer.Name = name
+	}
+
+	fmt.Print("Enter Customer Phone  : ")
+	scanner.Scan()
+	phone := scanner.Text()
+	if phone != "" {
+		customer.Phone = phone
+	}
+
+	fmt.Print("Enter Customer Address : ")
+	scanner.Scan()
+	address := scanner.Text()
+	if address != "" {
+		customer.Address = address
+	}
+
+	// fill the updated_at value with time now
+	customer.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	update := "UPDATE customer SET name = $2, phone = $3, address = $4, updated_at = $5 WHERE customer_id = $1;"
+	_, err = db.Exec(update, id, customer.Name, customer.Phone, customer.Address, customer.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} else {
+		fmt.Println("Successfully updated")  // Log success
+	}
 }
 
 func delete_customer() {
