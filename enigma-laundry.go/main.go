@@ -306,7 +306,7 @@ func delete_customer() {
 	customer_in_order := `SELECT customer_id FROM "order" WHERE customer_id = $1`
 
 	err = db.QueryRow(customer_in_order,id).Scan(&order.Customer_id)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			delete := "DELETE FROM customer WHERE customer_id = $1"
@@ -445,7 +445,6 @@ func clearScreen() {
     case "windows": // Windows
         clearCmd = exec.Command("cmd", "/c", "cls")
     default:
-        fmt.Println("Unsupported platform")
         return
     }
     clearCmd.Stdout = os.Stdout
