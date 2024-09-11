@@ -273,7 +273,56 @@ func update_customer() {
 }
 
 func delete_customer() {
+	db := connectDb()        
+	defer db.Close()   
 
+	customer := entity.Customer{}
+
+	fmt.Print("Insert a customer id :")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	// check if customer is exist
+	select_by_id := "SELECT customer_id FROM customer WHERE customer_id = $1"
+	err = db.QueryRow(select_by_id,id).Scan(&customer.Customer_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Customer Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	// check if customer id exits in order
+
+	order := entity.Order{}
+
+	customer_in_order := `SELECT customer_id FROM "order" WHERE customer_id = $1`
+
+	err = db.QueryRow(customer_in_order,id).Scan(&order.Customer_id)
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			delete := "DELETE FROM customer WHERE customer_id = $1"
+
+			_, err = db.Exec(delete, id)
+			if err != nil {
+				panic(err)  // Handle error if the query fails
+			} else {
+				fmt.Println("Successfully deleted data")  // Log success
+			}
+		} else {
+			panic(err)
+		}
+	} else {
+		fmt.Println("Customer ID is being used in orders. Please delete the order first.")
+	}
 }
 
 func service() {
