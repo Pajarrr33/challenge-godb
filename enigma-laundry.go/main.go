@@ -2,10 +2,16 @@ package main
 
 import (
 	"bufio"
+	"challenge-godb/entity"
+	"database/sql"
 	"fmt"
 	"os"
 	"os/exec"
-    "runtime"
+	"runtime"
+	"strconv"
+	"time"
+
+	_ "github.com/lib/pq"
 )
 
 var scanner *bufio.Scanner = bufio.NewScanner(os.Stdin)
@@ -36,9 +42,9 @@ func main() {
 		} else if selected_menu == "4" {
 			os.Exit(0)
 		} else {
-			fmt.Println("===========================")
+			fmt.Println("===============================")
 			fmt.Println("Menu yang anda masukan tidak ada!")
-			fmt.Println("===========================")
+			fmt.Println("===============================")
 		}
 	}
 }
@@ -75,23 +81,132 @@ func customer() {
 		} else if selected_menu == "6" {
 			main()
 		}else {
-			fmt.Println("===========================")
+			fmt.Println("===============================")
 			fmt.Println("Menu yang anda masukan tidak ada!")
-			fmt.Println("===========================")
+			fmt.Println("===============================")
 		}
 	}
 }
 
 func create_customer() {
+	customer := entity.Customer{}
 
+	db := connectDb()        
+	defer db.Close()          
+	var err error
+
+	fmt.Println("========== Create Customer ======")
+
+	fmt.Print("Masukan id customer     : ")
+	scanner.Scan()
+	customer.Customer_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("Masukan name customer   : ")
+	scanner.Scan()
+	customer.Name = scanner.Text()
+
+	fmt.Print("Masukan Phone customer  : ")
+	scanner.Scan()
+	customer.Phone = scanner.Text()
+
+	fmt.Print("Masukan Adress customer : ")
+	scanner.Scan()
+	customer.Address = scanner.Text()
+
+	// fill the created_at and updated_at value with time now
+	customer.Created_at = time.Now()
+	customer.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	// check if id customer is already exist 
+	check_id := "SELECT customer_id FROM customer WHERE customer_id = $1;"
+
+	err = db.QueryRow(check_id,customer.Customer_id).Scan(&customer.Customer_id)
+	if err == nil {
+		fmt.Println("Customer ID already exist. Please enter a different ID")
+		return
+	}
+
+	// insert customer data into db
+	insert_query := "INSERT INTO customer (customer_id, name, phone, address, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6);"
+
+	_, err = db.Exec(insert_query, customer.Customer_id, customer.Name, customer.Phone, customer.Address, customer.Created_at, customer.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} else {
+		fmt.Println("Successfully added")  // Log success
+	}
 }
 
 func view_of_list_customer() {
+	db := connectDb()        
+	defer db.Close()   
+	
+	customers := []entity.Customer{}
 
+	select_all := "SELECT customer_id,name,phone,address,created_at,updated_at FROM customer;"
+
+	rows, err := db.Query(select_all)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		customer := entity.Customer{}
+		err := rows.Scan(&customer.Customer_id, &customer.Name, &customer.Phone, &customer.Address, &customer.Created_at, &customer.Updated_at)
+		if err != nil {
+			panic(err)  // Handle error during scanning
+		}
+		customers = append(customers, customer)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("==== List of all customer =====")
+	for _, customer := range customers {
+		fmt.Println(customer.Customer_id,customer.Name,customer.Address,customer.Created_at,customer.Updated_at)
+	}
+	fmt.Println("===============================")
 }
 
 func view_details_customer_by_id() {
+	db := connectDb()        
+	defer db.Close()   
+	
+	customer := entity.Customer{}
 
+	select_by_id := "SELECT customer_id,name,phone,address,created_at,updated_at FROM customer WHERE customer_id = $1"
+
+	fmt.Print("Insert a customer id :")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.QueryRow(select_by_id,id).Scan(&customer.Customer_id, &customer.Name, &customer.Phone , &customer.Address, &customer.Created_at, &customer.Updated_at)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Customer Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+	
+	fmt.Println("===============================")
+	fmt.Println(customer.Customer_id, customer.Name, customer.Phone, customer.Address, customer.Created_at, customer.Updated_at)
+	fmt.Println("===============================")
 }
 
 func update_customer() {
@@ -134,9 +249,9 @@ func service() {
 		} else if selected_menu == "6" {
 			main()
 		}else {
-			fmt.Println("=================================")
+			fmt.Println("=====================================")
 			fmt.Println("Menu yang anda masukan tidak ada!")
-			fmt.Println("=================================")
+			fmt.Println("=====================================")
 		}
 	}
 }
@@ -190,9 +305,9 @@ func order() {
 		} else if selected_menu == "5" {
 			main()
 		} else {
-			fmt.Println("=================================")
+			fmt.Println("=========================")
 			fmt.Println("Menu yang anda masukan tidak ada!")
-			fmt.Println("=================================")
+			fmt.Println("=========================")
 		}
 	}
 }
@@ -227,4 +342,34 @@ func clearScreen() {
     }
     clearCmd.Stdout = os.Stdout
     clearCmd.Run()
+}
+
+
+func connectDb() *sql.DB {
+	// Database connection constants
+	const (
+		host     = "localhost"  // Host where the database is running
+		port     = 5432         // Port where PostgreSQL is listening
+		user     = "postgres"   // Database user
+		password = "Areman44"   // Database password
+		dbname   = "enigma_laundry"      // Database name
+	)
+
+	// Connection string for PostgreSQL
+	var psqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+    				host, port, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlInfo)  // Open a connection using the connection string
+
+	if err != nil {
+		panic(err)  // Handle error if connection fails
+	}
+
+	// Test the database connection
+	err = db.Ping()
+	if err != nil {
+		panic(err)  // Handle error if ping fails
+	}
+
+	return db
 }
