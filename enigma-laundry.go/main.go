@@ -489,7 +489,69 @@ func view_details_service_by_id() {
 }
 
 func update_service() {
+	db := connectDb()        
+	defer db.Close()   
 
+	service := entity.Service{}
+
+	fmt.Print("Insert a service id :")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	select_by_id := "SELECT service_id FROM service WHERE service_id = $1"
+	err = db.QueryRow(select_by_id,id).Scan(&service.Service_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Service Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	fmt.Println("======== Update Service ==========")
+
+	fmt.Print("Enter Service Name   : ")
+	scanner.Scan()
+	name := scanner.Text()
+	if name != "" {
+		service.Service_name = name
+	}
+
+	fmt.Print("Enter Service Unit   : ")
+	scanner.Scan()
+	unit := scanner.Text()
+	if unit != "" {
+		service.Unit = unit
+	}
+
+	fmt.Print("Enter Service Price  : ")
+	scanner.Scan()
+	price, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+	if price != 0 {
+		service.Price = price
+	}
+
+	// fill the updated_at value with time now
+	service.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	update := "UPDATE service SET service_name = $2, unit = $3, price = $4, updated_at = $5 WHERE service_id = $1;"
+	_, err = db.Exec(update, id, service.Service_name,service.Unit, service.Price,service.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} else {
+		fmt.Println("Successfully updated")  // Log success
+	}
 }
 
 func delete_service() {
