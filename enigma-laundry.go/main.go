@@ -422,11 +422,70 @@ func create_service() {
 }
 
 func view_of_list_service() {
+	db := connectDb()        
+	defer db.Close()   
+	
+	services := []entity.Service{}
 
+	select_all := "SELECT service_id,service_name,unit,price,created_at,updated_at FROM service;"
+
+	rows, err := db.Query(select_all)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		service := entity.Service{}
+		err := rows.Scan(&service.Service_id,&service.Service_name,&service.Unit,&service.Price,&service.Created_at,&service.Updated_at)
+		if err != nil {
+			panic(err)  // Handle error during scanning
+		}
+		services = append(services, service)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("==== List of all service =====")
+	for _, service := range services {
+		fmt.Println(service.Service_id,service.Service_name,service.Unit,service.Price,service.Created_at,service.Updated_at)
+	}
+	fmt.Println("===============================")
 }
 
 func view_details_service_by_id() {
+	db := connectDb()        
+	defer db.Close()   
+	
+	service := entity.Service{}
 
+	select_by_id := "SELECT service_id,service_name,unit,price,created_at,updated_at FROM service WHERE service_id = $1"
+
+	fmt.Print("Insert a service id :")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.QueryRow(select_by_id,id).Scan(&service.Service_id,&service.Service_name,&service.Unit,&service.Price,&service.Created_at,&service.Updated_at)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Service Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+	
+	fmt.Println("===============================")
+	fmt.Println(service.Service_id,service.Service_name,service.Unit,service.Price,service.Created_at,service.Updated_at)
+	fmt.Println("===============================")
 }
 
 func update_service() {
