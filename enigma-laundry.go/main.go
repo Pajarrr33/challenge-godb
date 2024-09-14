@@ -642,7 +642,107 @@ func order() {
 }
 
 func create_order() {
+	order := entity.Order{}
+	order_detail := entity.Order_detail{}
 
+	db := connectDb()        
+	defer db.Close()   
+	var err error 
+
+	fmt.Println("========== Create Order ======")
+
+	fmt.Print("Insert Order Id     : ")
+	scanner.Scan()
+	order.Order_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	// check if id order is already exist 
+	check_id_order := `SELECT order_id FROM "order" WHERE order_id = $1;`
+
+	err = db.QueryRow(check_id_order,order.Order_id).Scan(&order.Order_id)
+	if err == nil {
+		fmt.Println("===============================")
+		fmt.Println("Order ID already exists. Please enter a different ID.")
+		fmt.Println("===============================")
+		return
+	}
+
+	fmt.Print("Insert Customer Id   : ")
+	scanner.Scan()
+	order.Customer_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	customer_exist := "SELECT customer_id FROM customer WHERE customer_id = $1"
+	err = db.QueryRow(customer_exist,order.Customer_id).Scan(&order.Customer_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("===============================")
+			fmt.Println("Customer Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	fmt.Print("Insert Received By  : ")
+	scanner.Scan()
+	order.Received_by = scanner.Text()
+
+	err = db.QueryRow("SELECT MAX(order_detail_id) + 1 FROM order_detail;").Scan(&order_detail.Order_detail_id)
+	if err != nil {
+		panic(err)
+	} 
+
+	fmt.Print("Insert Service Id : ")
+	scanner.Scan()
+	order_detail.Service_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("Insert Quantity : ")
+	scanner.Scan()
+	order_detail.Qty, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	// fill the created_at and updated_at value with time now
+	order.Order_date = time.Now()
+	order.Created_at = time.Now()
+	order.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	tx,err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	insert_order := `INSERT INTO "order" (order_id,customer_id,order_date,received_by,created_at,updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
+	
+	_,err = tx.Exec(insert_order,order.Order_id,order.Customer_id,order.Order_date,order.Received_by,order.Created_at,order.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} 
+
+	insert_order_detail := "INSERT INTO order_detail (order_detail_id,order_id,service_id,qty) VALUES ($1,$2,$3,$4)"
+	_,err = tx.Exec(insert_order_detail,order_detail.Order_detail_id,order.Order_id,order_detail.Service_id,order_detail.Qty)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} 
+
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("Successfully added")
+	}
 }
 
 func complete_order() {
