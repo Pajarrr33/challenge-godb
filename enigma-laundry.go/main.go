@@ -291,7 +291,7 @@ func delete_customer() {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Println("===============================")
-			fmt.Println("Customer Not Found")
+			fmt.Println("Customer Id Not Found Please enter a different Id")
 			fmt.Println("===============================")
 			return
 		}
@@ -501,8 +501,8 @@ func update_service() {
 		panic(err)
 	}
 
-	select_by_id := "SELECT service_id FROM service WHERE service_id = $1"
-	err = db.QueryRow(select_by_id,id).Scan(&service.Service_id)
+	select_by_id := "SELECT service_id,service_name,unit,price FROM service WHERE service_id = $1"
+	err = db.QueryRow(select_by_id,id).Scan(&service.Service_id,&service.Service_name,&service.Unit,&service.Price)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Println("===============================")
@@ -532,13 +532,16 @@ func update_service() {
 
 	fmt.Print("Enter Service Price  : ")
 	scanner.Scan()
-	price, err := strconv.Atoi(scanner.Text())
-	if err != nil {
-		panic(err)
-	}
-	if price != 0 {
+	input := scanner.Text()
+
+	// Check if the input is empty
+	if input != "" {
+		price, err := strconv.Atoi(input)
+		if err != nil {
+			panic(err)
+		}
 		service.Price = price
-	}
+	} 
 
 	// fill the updated_at value with time now
 	service.Updated_at = time.Now()
