@@ -767,7 +767,7 @@ func complete_order() {
 	err = db.QueryRow(check_id_order,order.Order_id).Scan(&order.Order_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Println("Order Id Not Found")
+			fmt.Println("Order Not Found")
 			fmt.Println("===============================")
 			return
 		}
@@ -796,11 +796,74 @@ func complete_order() {
 }
 
 func view_of_list_order() {
+	db := connectDb()        
+	defer db.Close()   
+	
+	orders := []entity.Order{}
 
+	select_all := `SELECT order_id,customer_id,order_date,COALESCE(completion_date, '0001-01-01 00:00:00') AS completion_date,received_by,created_at,updated_at FROM "order";`
+
+	rows, err := db.Query(select_all)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		order := entity.Order{}
+		err := rows.Scan(&order.Order_id,&order.Customer_id,&order.Order_date,&order.Completion_date,&order.Received_by,&order.Created_at,&order.Updated_at)
+		if err != nil {
+			panic(err)  // Handle error during scanning
+		}
+		orders = append(orders, order)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("==== List of all order =====")
+	for _, order := range orders {
+		fmt.Println(order.Order_id,order.Customer_id,order.Order_date,order.Completion_date,order.Received_by,order.Created_at,order.Updated_at)
+	}
+	fmt.Println("===============================")
 }
 
 func view_order_detail_by_id() {
+	order := entity.Order{}
+	order_detail := entity.Order_detail{}
 
+	db := connectDb()        
+	defer db.Close()   
+
+	fmt.Println("========== View Order Details By Id ======")
+
+	fmt.Print("Insert Order Id   : ")
+	scanner.Scan()
+	id, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	select_by_id := `SELECT "order".order_id,customer_id,order_detail.service_id,order_detail.qty,order_date,COALESCE(completion_date, '0001-01-01 00:00:00') AS completion_date,received_by,created_at,updated_at 
+	FROM "order" 
+	INNER JOIN order_detail ON "order".order_id = order_detail.order_id
+	WHERE "order".order_id = $1;`
+
+	err = db.QueryRow(select_by_id,id).Scan(&order.Order_id, &order.Customer_id, &order_detail.Service_id, &order_detail.Qty, &order.Order_date, &order.Completion_date, &order.Received_by, &order.Created_at, &order.Updated_at)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Order Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	fmt.Println(order.Order_id, order.Customer_id, order_detail.Service_id, order_detail.Qty, order.Order_date, order.Completion_date, order.Received_by, order.Created_at, order.Updated_at)
+	fmt.Println("===============================")
 }
 
 // clearScreen clears the terminal based on the OS
