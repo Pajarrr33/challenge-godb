@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"time"
-
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -820,20 +820,29 @@ func clearScreen() {
 
 
 func connectDb() *sql.DB {
+
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	// Database connection constants
-	const (
-		host     = "localhost"  // Host where the database is running
-		port     = 5432         // Port where PostgreSQL is listening
-		user     = "postgres"   // Database user
-		password = "Areman44"   // Database password
-		dbname   = "enigma_laundry"      // Database name
-	)
+	
+		host     := os.Getenv("DB_HOST")  		    	// Host where the database is running
+		port,err := strconv.Atoi(os.Getenv("DB_PORT"))  // Port where PostgreSQL is listening
+		if err != nil {
+			panic(err)
+		}
+		user     := os.Getenv("DB_USERNAME")  			// Database user
+		password := os.Getenv("DB_PASSWORD")   			// Database password
+		dbname   := os.Getenv("DB_DATABASE")        	// Database name
+		dbconnection := os.Getenv("DB_CONNECTION")  	// Name of the database you want to connect
 
 	// Connection string for PostgreSQL
 	var psqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
     				host, port, user, password, dbname)
 
-	db, err := sql.Open("postgres", psqlInfo)  // Open a connection using the connection string
+	db, err := sql.Open(dbconnection, psqlInfo)  // Open a connection using the connection string
 
 	if err != nil {
 		panic(err)  // Handle error if connection fails
