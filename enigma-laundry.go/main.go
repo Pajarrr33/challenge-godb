@@ -746,7 +746,53 @@ func create_order() {
 }
 
 func complete_order() {
+	order := entity.Order{}
 
+	db := connectDb()        
+	defer db.Close()   
+	var err error 
+
+	fmt.Println("========== Complete Order ======")
+
+	fmt.Print("Insert Order Id          : ")
+	scanner.Scan()
+	order.Order_id, err = strconv.Atoi(scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	// check if id order is exist 
+	check_id_order := `SELECT order_id FROM "order" WHERE order_id = $1;`
+
+	err = db.QueryRow(check_id_order,order.Order_id).Scan(&order.Order_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Order Id Not Found")
+			fmt.Println("===============================")
+			return
+		}
+
+		panic(err)
+	}
+
+	fmt.Print("Insert Completion Date(YYYY-MM-DD H:M:S)  : ")
+	scanner.Scan()
+	order.Completion_date, err = time.Parse("2006-01-02 15:04:05", scanner.Text())
+	if err != nil {
+		panic(err)
+	}
+
+	order.Updated_at = time.Now()
+
+	fmt.Println("=================================")
+
+	update := `UPDATE "order" SET completion_date = $2, updated_at = $3 WHERE order_id = $1;`
+	_, err = db.Exec(update, order.Order_id, order.Completion_date,order.Updated_at)
+	if err != nil {
+		panic(err)  // Handle error if the query fails
+	} else {
+		fmt.Println("Successfully updated")  // Log success
+	}
 }
 
 func view_of_list_order() {
