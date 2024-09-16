@@ -28,7 +28,7 @@ func main() {
 		fmt.Println("3.Order")
 		fmt.Println("4.Exit")
 		fmt.Println("===============================")
-		fmt.Print("Masukan menu yang anda inginkan :")
+		fmt.Print("Insert a menu you want :")
 
 		scanner.Scan()
 		selected_menu = scanner.Text()
@@ -43,7 +43,7 @@ func main() {
 			os.Exit(0)
 		} else {
 			fmt.Println("===============================")
-			fmt.Println("Menu yang anda masukan tidak ada!")
+			fmt.Println("A menu that you insert is not found")
 			fmt.Println("===============================")
 		}
 	}
@@ -63,7 +63,7 @@ func customer() {
 		fmt.Println("5.Delete Customer")
 		fmt.Println("6.Back to Main Menu")
 		fmt.Println("===============================")
-		fmt.Print("Masukan menu yang anda inginkan :")
+		fmt.Print("Insert a menu you want :")
 
 		scanner.Scan()
 		selected_menu = scanner.Text()
@@ -82,7 +82,7 @@ func customer() {
 			main()
 		}else {
 			fmt.Println("===============================")
-			fmt.Println("Menu yang anda masukan tidak ada!")
+			fmt.Println("A menu that you insert is not found")
 			fmt.Println("===============================")
 		}
 	}
@@ -97,22 +97,22 @@ func create_customer() {
 
 	fmt.Println("========== Create Customer ======")
 
-	fmt.Print("Masukan id customer     : ")
+	fmt.Print("Insert customer id     : ")
 	scanner.Scan()
 	customer.Customer_id, err = strconv.Atoi(scanner.Text())
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Print("Masukan name customer   : ")
+	fmt.Print("Insert customer name   : ")
 	scanner.Scan()
 	customer.Name = scanner.Text()
 
-	fmt.Print("Masukan Phone customer  : ")
+	fmt.Print("Insert customer Phone  : ")
 	scanner.Scan()
 	customer.Phone = scanner.Text()
 
-	fmt.Print("Masukan Adress customer : ")
+	fmt.Print("Insert customer Adress : ")
 	scanner.Scan()
 	customer.Address = scanner.Text()
 
@@ -339,7 +339,7 @@ func service() {
 		fmt.Println("5.Delete Service")
 		fmt.Println("6.Back to Main Menu")
 		fmt.Println("===============================")
-		fmt.Print("Masukan menu yang anda inginkan :")
+		fmt.Print("Insert a menu you want :")
 
 		scanner.Scan()
 		selected_menu = scanner.Text()
@@ -358,7 +358,7 @@ func service() {
 			main()
 		}else {
 			fmt.Println("=====================================")
-			fmt.Println("Menu yang anda masukan tidak ada!")
+			fmt.Println("A menu that you insert is not found")
 			fmt.Println("=====================================")
 		}
 	}
@@ -618,7 +618,7 @@ func order() {
 		fmt.Println("4.View Order Details By ID")
 		fmt.Println("5.Back to Main Menu")
 		fmt.Println("===============================")
-		fmt.Print("Masukan menu yang anda inginkan :")
+		fmt.Print("Insert a menu you want :")
 
 		scanner.Scan()
 		selected_menu = scanner.Text()
@@ -635,7 +635,7 @@ func order() {
 			main()
 		} else {
 			fmt.Println("=========================")
-			fmt.Println("Menu yang anda masukan tidak ada!")
+			fmt.Println("A menu that you insert is not found")
 			fmt.Println("=========================")
 		}
 	}
